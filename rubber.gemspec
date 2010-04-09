@@ -5,11 +5,11 @@
 
 Gem::Specification.new do |s|
   s.name = %q{rubber}
-  s.version = "1.3.0"
+  s.version = "2.0.0.rails3"
 
-  s.required_rubygems_version = Gem::Requirement.new(">= 0") if s.respond_to? :required_rubygems_version=
+  s.required_rubygems_version = Gem::Requirement.new("> 1.3.1") if s.respond_to? :required_rubygems_version=
   s.authors = ["Matt Conway"]
-  s.date = %q{2010-04-05}
+  s.date = %q{2010-04-09}
   s.default_executable = %q{vulcanize}
   s.description = %q{The rubber plugin enables relatively complex multi-instance deployments of RubyOnRails applications to Amazon's Elastic Compute Cloud (EC2).  Like capistrano, rubber is role based, so you can define a set of configuration files for a role and then assign that role to as many concrete instances as needed. One can also assign multiple roles to a single instance. This lets one start out with a single ec2 instance (belonging to all roles), and add new instances into the mix as needed to scale specific facets of your deployment, e.g. adding in instances that serve only as an 'app' role to handle increased app server load.}
   s.email = %q{matt@conwaysplace.com}
@@ -25,152 +25,6 @@ Gem::Specification.new do |s|
      "TODO",
      "VERSION",
      "bin/vulcanize",
-     "generators/vulcanize/USAGE",
-     "generators/vulcanize/templates/apache/config/rubber/deploy-apache.rb",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/deflate.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/expires.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/headers.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/monit-apache.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/ports.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/apache/setenvif.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/web_tools/tools-apache-vhost.conf",
-     "generators/vulcanize/templates/apache/config/rubber/role/web_tools/tools-apache.auth",
-     "generators/vulcanize/templates/apache/config/rubber/role/web_tools/tools-index.html",
-     "generators/vulcanize/templates/apache/config/rubber/rubber-apache.yml",
-     "generators/vulcanize/templates/apache/templates.yml",
-     "generators/vulcanize/templates/base/Capfile",
-     "generators/vulcanize/templates/base/config/deploy.rb",
-     "generators/vulcanize/templates/base/config/rubber/common/crontab",
-     "generators/vulcanize/templates/base/config/rubber/common/monit-postfix.conf",
-     "generators/vulcanize/templates/base/config/rubber/common/rubber.profile",
-     "generators/vulcanize/templates/base/config/rubber/deploy-setup.rb",
-     "generators/vulcanize/templates/base/config/rubber/rubber-dns.yml",
-     "generators/vulcanize/templates/base/config/rubber/rubber.yml",
-     "generators/vulcanize/templates/base/lib/tasks/rubber.rake",
-     "generators/vulcanize/templates/base/script/cron-rake",
-     "generators/vulcanize/templates/base/script/cron-runner",
-     "generators/vulcanize/templates/base/script/cron-sh",
-     "generators/vulcanize/templates/base/templates.yml",
-     "generators/vulcanize/templates/complete_mongrel_mysql/config/rubber/role/haproxy/haproxy-mongrel.conf",
-     "generators/vulcanize/templates/complete_mongrel_mysql/config/rubber/role/nginx/nginx-mongrel.conf",
-     "generators/vulcanize/templates/complete_mongrel_mysql/config/rubber/rubber-complete.yml",
-     "generators/vulcanize/templates/complete_mongrel_mysql/templates.yml",
-     "generators/vulcanize/templates/complete_passenger_mysql/config/rubber/role/haproxy/haproxy-passenger.conf",
-     "generators/vulcanize/templates/complete_passenger_mysql/config/rubber/rubber-complete.yml",
-     "generators/vulcanize/templates/complete_passenger_mysql/templates.yml",
-     "generators/vulcanize/templates/cruise/config/rubber/deploy-cruise.rb",
-     "generators/vulcanize/templates/cruise/config/rubber/role/cruise/cruise",
-     "generators/vulcanize/templates/cruise/config/rubber/role/cruise/my.cnf",
-     "generators/vulcanize/templates/cruise/config/rubber/role/cruise/production.rb",
-     "generators/vulcanize/templates/cruise/config/rubber/role/cruise/site_config.rb",
-     "generators/vulcanize/templates/cruise/config/rubber/role/web_tools/cruise-nginx.conf",
-     "generators/vulcanize/templates/cruise/config/rubber/rubber-cruise.yml",
-     "generators/vulcanize/templates/cruise/templates.yml",
-     "generators/vulcanize/templates/haproxy/config/rubber/deploy-haproxy.rb",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/haproxy/haproxy-base.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/haproxy/haproxy-default.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/haproxy/monit-haproxy.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/haproxy/syslog-haproxy.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/haproxy/syslogd-default.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/role/web_tools/haproxy-nginx.conf",
-     "generators/vulcanize/templates/haproxy/config/rubber/rubber-haproxy.yml",
-     "generators/vulcanize/templates/haproxy/templates.yml",
-     "generators/vulcanize/templates/jetty/config/rubber/deploy-jetty.rb",
-     "generators/vulcanize/templates/jetty/config/rubber/role/jetty/jetty.sh",
-     "generators/vulcanize/templates/jetty/config/rubber/role/jetty/jetty.xml",
-     "generators/vulcanize/templates/jetty/config/rubber/role/jetty/monit-jetty.conf",
-     "generators/vulcanize/templates/jetty/config/rubber/rubber-jetty.yml",
-     "generators/vulcanize/templates/jetty/templates.yml",
-     "generators/vulcanize/templates/memcached/config/memcached.yml",
-     "generators/vulcanize/templates/memcached/config/rubber/common/memcached.yml",
-     "generators/vulcanize/templates/memcached/config/rubber/role/memcached/memcached.conf",
-     "generators/vulcanize/templates/memcached/config/rubber/role/memcached/memcached_munin_plugin",
-     "generators/vulcanize/templates/memcached/config/rubber/rubber-memcached.yml",
-     "generators/vulcanize/templates/memcached/templates.yml",
-     "generators/vulcanize/templates/minimal_mysql/templates.yml",
-     "generators/vulcanize/templates/minimal_nodb/templates.yml",
-     "generators/vulcanize/templates/mongrel/config/rubber/deploy-mongrel.rb",
-     "generators/vulcanize/templates/mongrel/config/rubber/role/mongrel/mongrel_cluster.yml",
-     "generators/vulcanize/templates/mongrel/config/rubber/role/mongrel/monit-mongrel.conf",
-     "generators/vulcanize/templates/mongrel/config/rubber/rubber-mongrel.yml",
-     "generators/vulcanize/templates/mongrel/templates.yml",
-     "generators/vulcanize/templates/monit/config/rubber/common/monit-default.conf",
-     "generators/vulcanize/templates/monit/config/rubber/common/monit.conf",
-     "generators/vulcanize/templates/monit/config/rubber/deploy-monit.rb",
-     "generators/vulcanize/templates/monit/config/rubber/role/web_tools/monit-admin-nginx.conf",
-     "generators/vulcanize/templates/monit/config/rubber/rubber-monit.yml",
-     "generators/vulcanize/templates/monit/templates.yml",
-     "generators/vulcanize/templates/munin/config/rubber/common/monit-munin.conf",
-     "generators/vulcanize/templates/munin/config/rubber/common/munin-node.conf",
-     "generators/vulcanize/templates/munin/config/rubber/common/munin-plugins.conf",
-     "generators/vulcanize/templates/munin/config/rubber/deploy-munin.rb",
-     "generators/vulcanize/templates/munin/config/rubber/role/web_tools/munin-nginx.conf",
-     "generators/vulcanize/templates/munin/config/rubber/role/web_tools/munin-plugins.conf",
-     "generators/vulcanize/templates/munin/config/rubber/role/web_tools/munin.conf",
-     "generators/vulcanize/templates/munin/config/rubber/rubber-munin.yml",
-     "generators/vulcanize/templates/munin/script/munin/example_mysql_query.rb",
-     "generators/vulcanize/templates/munin/script/munin/example_simple.rb",
-     "generators/vulcanize/templates/munin/templates.yml",
-     "generators/vulcanize/templates/mysql/config/rubber/common/database.yml",
-     "generators/vulcanize/templates/mysql/config/rubber/deploy-mysql.rb",
-     "generators/vulcanize/templates/mysql/config/rubber/role/db/apparmor-mysql.conf",
-     "generators/vulcanize/templates/mysql/config/rubber/role/db/crontab",
-     "generators/vulcanize/templates/mysql/config/rubber/role/db/monit-mysql.cnf",
-     "generators/vulcanize/templates/mysql/config/rubber/role/db/my.cnf",
-     "generators/vulcanize/templates/mysql/config/rubber/role/mysql_slave/mysql_slave_munin_plugin",
-     "generators/vulcanize/templates/mysql/config/rubber/rubber-mysql.yml",
-     "generators/vulcanize/templates/mysql/templates.yml",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/common/mysql_cluster_migrations.rb",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/deploy-mysql_cluster.rb",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/role/mysql_data/my.cnf",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/role/mysql_mgm/ndb_mgmd.cnf",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/role/mysql_sql/monit-mysql_cluster_sql.cnf",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/role/mysql_sql/my.cnf",
-     "generators/vulcanize/templates/mysql_cluster/config/rubber/rubber-mysql_cluster.yml",
-     "generators/vulcanize/templates/mysql_cluster/templates.yml",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/common/database.yml",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/common/monit-mysql_proxy.cnf",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/common/mysql-proxy",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/common/mysql-proxy.conf",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/common/mysql-proxy.lua",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/deploy-mysql_proxy.rb",
-     "generators/vulcanize/templates/mysql_proxy/config/rubber/rubber-mysql_proxy.yml",
-     "generators/vulcanize/templates/mysql_proxy/templates.yml",
-     "generators/vulcanize/templates/nginx/config/rubber/deploy-nginx.rb",
-     "generators/vulcanize/templates/nginx/config/rubber/role/nginx/crontab",
-     "generators/vulcanize/templates/nginx/config/rubber/role/nginx/monit-nginx.conf",
-     "generators/vulcanize/templates/nginx/config/rubber/role/nginx/nginx.conf",
-     "generators/vulcanize/templates/nginx/config/rubber/role/web_tools/nginx-tools.conf",
-     "generators/vulcanize/templates/nginx/config/rubber/role/web_tools/tools-index.html",
-     "generators/vulcanize/templates/nginx/config/rubber/role/web_tools/tools-nginx.auth",
-     "generators/vulcanize/templates/nginx/config/rubber/rubber-nginx.yml",
-     "generators/vulcanize/templates/nginx/templates.yml",
-     "generators/vulcanize/templates/passenger/config/rubber/deploy-passenger.rb",
-     "generators/vulcanize/templates/passenger/config/rubber/role/passenger/munin-passenger-memory.conf",
-     "generators/vulcanize/templates/passenger/config/rubber/role/passenger/munin-passenger-sudoers.conf",
-     "generators/vulcanize/templates/passenger/config/rubber/role/passenger/munin-passenger.conf",
-     "generators/vulcanize/templates/passenger/config/rubber/role/passenger/passenger-apache-vhost.conf",
-     "generators/vulcanize/templates/passenger/config/rubber/role/passenger/passenger.conf",
-     "generators/vulcanize/templates/passenger/config/rubber/rubber-passenger.yml",
-     "generators/vulcanize/templates/passenger/templates.yml",
-     "generators/vulcanize/templates/redis/config/rubber/deploy-redis.rb",
-     "generators/vulcanize/templates/redis/config/rubber/role/redis/crontab",
-     "generators/vulcanize/templates/redis/config/rubber/role/redis/monit-redis.conf",
-     "generators/vulcanize/templates/redis/config/rubber/role/redis/redis.conf",
-     "generators/vulcanize/templates/redis/config/rubber/rubber-redis.yml",
-     "generators/vulcanize/templates/redis/templates.yml",
-     "generators/vulcanize/templates/resque/config/rubber/deploy-resque-worker-default.rb",
-     "generators/vulcanize/templates/resque/config/rubber/deploy-resque.rb",
-     "generators/vulcanize/templates/resque/config/rubber/role/resque_worker_default/monit-resque_worker_default.conf",
-     "generators/vulcanize/templates/resque/config/rubber/rubber-resque.yml",
-     "generators/vulcanize/templates/resque/templates.yml",
-     "generators/vulcanize/templates/sphinx/config/rubber/common/sphinx.yml",
-     "generators/vulcanize/templates/sphinx/config/rubber/deploy-sphinx.rb",
-     "generators/vulcanize/templates/sphinx/config/rubber/role/sphinx/crontab",
-     "generators/vulcanize/templates/sphinx/config/rubber/role/sphinx/monit-sphinx.conf",
-     "generators/vulcanize/templates/sphinx/config/rubber/rubber-sphinx.yml",
-     "generators/vulcanize/templates/sphinx/templates.yml",
-     "generators/vulcanize/vulcanize_generator.rb",
      "lib/capistrano/hostcmd.rb",
      "lib/rubber.rb",
      "lib/rubber/capistrano.rb",
@@ -226,16 +80,14 @@ Gem::Specification.new do |s|
       s.add_runtime_dependency(%q<aws-s3>, [">= 0"])
       s.add_runtime_dependency(%q<nettica>, [">= 0"])
       s.add_runtime_dependency(%q<zerigo_dns>, [">= 0"])
-      s.add_runtime_dependency(%q<httparty>, [">= 0"])
-      s.add_runtime_dependency(%q<rails>, [">= 0"])
+      s.add_runtime_dependency(%q<railties>, ["= 3.0.0.beta2"])
     else
       s.add_dependency(%q<capistrano>, [">= 2.4.0"])
       s.add_dependency(%q<amazon-ec2>, [">= 0.9.0"])
       s.add_dependency(%q<aws-s3>, [">= 0"])
       s.add_dependency(%q<nettica>, [">= 0"])
       s.add_dependency(%q<zerigo_dns>, [">= 0"])
-      s.add_dependency(%q<httparty>, [">= 0"])
-      s.add_dependency(%q<rails>, [">= 0"])
+      s.add_dependency(%q<railties>, ["= 3.0.0.beta2"])
     end
   else
     s.add_dependency(%q<capistrano>, [">= 2.4.0"])
@@ -243,8 +95,7 @@ Gem::Specification.new do |s|
     s.add_dependency(%q<aws-s3>, [">= 0"])
     s.add_dependency(%q<nettica>, [">= 0"])
     s.add_dependency(%q<zerigo_dns>, [">= 0"])
-    s.add_dependency(%q<httparty>, [">= 0"])
-    s.add_dependency(%q<rails>, [">= 0"])
+    s.add_dependency(%q<railties>, ["= 3.0.0.beta2"])
   end
 end
 
