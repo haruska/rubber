@@ -19,8 +19,9 @@ namespace :rubber do
           rubber_instances.save
         end
 
-        # then, associate it if we don't have a record (on instance) of association
-        if ! ic.static_ip
+        # then, associate it if we don't have a record (on instance) of association or it
+        # doesn't match the instance's current external ip
+        if !ic.static_ip || ip != ic.external_ip
           logger.info "Associating static ip #{ip} with #{ic.full_name}"
           associate_static_ip(ip, ic.instance_id)
 
@@ -134,6 +135,7 @@ namespace :rubber do
     # First half of the sync.
     new_receiver = Rubber::Configuration::InstanceItem.new(old_receiver.name,
       old_receiver.domain, old_receiver.roles, old_receiver.instance_id,
+      old_receiver.image_type, old_receiver.image_id,
       old_receiver.security_groups)
     new_receiver.static_ip = static_ip
     rubber_instances.add(new_receiver)
@@ -153,6 +155,7 @@ namespace :rubber do
     # Second half of the sync.
     new_donor = Rubber::Configuration::InstanceItem.new(old_donor.name,
       old_donor.domain, old_donor.roles, old_donor.instance_id,
+      old_donor.image_type, old_donor.image_id,
       old_donor.security_groups)
     rubber_instances.add(new_donor)
 

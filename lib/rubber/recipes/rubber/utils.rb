@@ -4,38 +4,46 @@ namespace :rubber do
     Convenience task for creating a staging instance for the given RUBBER_ENV/RAILS_ENV.
     By default this task assigns all known roles when creating the instance,
     but you can specify a different default in rubber.yml:staging_roles
-    At the end, the instance will be up and running
+    At the end, the instance will be up and running.  If the staging instance
+    already exists, the user will be warned, and if they chose to proceed,
+    will skip the create and just bootstrap that instance.
     e.g. RUBBER_ENV=matt cap create_staging
   DESC
   required_task :create_staging do
     if rubber_instances.size > 0
-      value = Capistrano::CLI.ui.ask("The #{RUBBER_ENV} environment already has instances, Are you SURE you want to create a staging instance that may interact with them [y/N]?: ")
+      value = Capistrano::CLI.ui.ask("The #{Rubber.env} environment already has instances, Are you SURE you want to create a staging instance that may interact with them [y/N]?: ")
       fatal("Exiting", 0) if value !~ /^y/
     end
-    instance_alias = ENV['ALIAS'] = rubber.get_env("ALIAS", "Hostname to use for staging instance", true, RUBBER_ENV)
-    default_roles = rubber_env.staging_roles || "*"
-    roles = ENV['ROLES'] = rubber.get_env("ROLES", "Roles to use for staging instance", true, default_roles)
-
-    # some bootstraps update code (bootstrap_db) but if you don't have that role, need to do it here
-    # Since release directory variable gets reused by cap, we have to just do the symlink here - doing
-    # a update again will fail
-    set :rubber_code_was_updated, false
-    after "deploy:update_code" do
-      set :rubber_code_was_updated, true
-    end
+    instance_alias = ENV['ALIAS'] = rubber.get_env("ALIAS", "Hostname to use for staging instance", true, Rubber.env)
 
     if rubber_instances[instance_alias]
       logger.info "Instance already exists, skipping to bootstrap"
     else
+      default_roles = rubber_env.staging_roles
+      # default staging roles to all roles minus slaves (db without primary=true is a slave)
+      default_roles ||= rubber_cfg.environment.known_roles.reject {|r| r =~ /slave/ || r =~ /^db$/ }.join(",")
+      roles = ENV['ROLES'] = rubber.get_env("ROLES", "Roles to use for staging instance", true, default_roles)
+      
       rubber.create
     end
-    rubber.bootstrap
-    # stop everything in case we have a bundled instance with monit, etc starting at boot
+
+    # stop everything before so monit doesn't start stuff during bootstrapping
+    # if its already installed due to a bundled instance
     deploy.stop rescue nil
-    if ! rubber_code_was_updated
+
+    rubber.bootstrap
+    
+    # stop everything after in case package upgrades during bootstrap start up
+    # services - we should be able to safely do a deploy:start below
+    deploy.stop rescue nil
+
+    # some bootstraps update code (bootstrap_db) but if you don't have that role, need to do it here
+    # Since release directory variable gets reused by cap, we have to just do the symlink here - doing
+    # a update again will fail
+    if ! fetch(:rubber_code_was_updated, false)
       deploy.update_code
     end
-    deploy.symlink
+    deploy.create_symlink
     deploy.migrate
     deploy.start
   end
@@ -44,20 +52,24 @@ namespace :rubber do
     Destroy the staging instance for the given RUBBER_ENV.
   DESC
   task :destroy_staging do
-    ENV['ALIAS'] = rubber.get_env("ALIAS", "Hostname of staging instance to be destroyed", true, RUBBER_ENV)
+    ENV['ALIAS'] = rubber.get_env("ALIAS", "Hostname of staging instance to be destroyed", true, Rubber.env)
     rubber.destroy
   end
 
   desc <<-DESC
     Live tail of rails log files for all machines
     By default tails the rails logs for the current RUBBER_ENV, but one can
-    set FILE=/path/file.*.glob to tails a different set
+    set FILE=/path/file.*.glob to tail a different set
   DESC
   task :tail_logs, :roles => :app do
-    log_file_glob = rubber.get_env("FILE", "Log files to tail", true, "#{current_path}/log/#{RUBBER_ENV}*.log")
+    last_host = ""
+    log_file_glob = rubber.get_env("FILE", "Log files to tail", true, "#{current_path}/log/#{Rubber.env}*.log")
+    trap("INT") { puts 'Exiting...'; exit 0; }                    # handle ctrl-c gracefully
     run "tail -qf #{log_file_glob}" do |channel, stream, data|
-      puts  # for an extra line break before the host name
-      puts data
+      puts if channel[:host] != last_host                         # blank line between different hosts
+      host = "[#{channel.properties[:host].gsub(/\..*/, '')}]"    # get left-most subdomain
+      data.lines { |line| puts "%-15s %s" % [host, line] }        # add host name to the start of each line
+      last_host = channel[:host]
       break if stream == :err
     end
   end
@@ -73,48 +85,45 @@ namespace :rubber do
   def serial_task(ns, name, options = {}, &block)
     # first figure out server names for the passed in roles - when no roles
     # are passed in, use all servers
-    serial_roles = Array(options[:roles])
+    
+    serial_roles = Array(options[:roles].respond_to?(:call) ? options[:roles].call() : options[:roles])
     servers = {}
     if serial_roles.empty?
-      all_servers = []
-      self.roles.each do |rolename, serverdefs|
-        all_servers += serverdefs.collect {|server| server.host}
+      all_servers = top.roles.collect do |rolename, serverdefs|
+        serverdefs.collect(&:host)
       end
-      servers[:_serial_all] = all_servers.uniq.sort
+      servers[:_serial_all] = all_servers.flatten.uniq.sort
     else
-      # get servers for each role
-      self.roles.each do |rolename, serverdefs|
+      # Get servers for each role
+      top.roles.each do |rolename, serverdefs|
         if serial_roles.include?(rolename)
-          servers[rolename] ||= []
-          servers[rolename] += serverdefs.collect {|server| server.host}
+          servers[rolename] = serverdefs.collect(&:host)
         end
       end
 
       # Remove duplication of servers - roles which come first in list
       # have precedence, so the servers show up in that group
-      serial_roles.each_with_index do |rolename, i|
-        servers[rolename] ||= []
-        serial_roles[i+1..-1].each do |r|
-          servers[r] -= servers[rolename]
-        end
+      added_servers = []
+      serial_roles.each do |rolename|
+        next if servers[rolename].nil?
+
+        servers[rolename] -= added_servers
+        added_servers << servers[rolename]
         servers[rolename] = servers[rolename].uniq.sort
       end
     end
 
-    # group each role's servers into slices, but combine slices across roles
+    # group each role's servers into slices and combine
     slices = []
     servers.each do |rolename, svrs|
-      next if svrs.size == 0
       # figure out size of each slice by dividing server count by # of groups
-      slice_size = (Float(svrs.size) / (options.delete(:groups) || 2)).round
-      slice_size = 1 if slice_size == 0
-      slice_idx = 0
-      svrs.each_slice(slice_size) do |srv_slice|
-        slices[slice_idx] ||= []
-        slices[slice_idx] += srv_slice
-        slice_idx += 1
-      end
+      slice_size = (svrs.size.to_f / (options.delete(:groups) || 2)).round
+      slice_size = 1 if slice_size < 1
+      
+      # add servers to slices
+      slices += svrs.each_slice(slice_size).to_a
     end
+    
     # for each slice, define a new task specific to the hosts in that slice
     task_syms = []
     slices.each do |server_group|
@@ -147,22 +156,33 @@ namespace :rubber do
     return local_alias
   end
 
-  def prepare_script(name, contents, stop_on_error_cmd=rubber_env.stop_on_error_cmd)
+  def prepare_script(name, contents, stop_on_error_cmd=rubber_env.stop_on_error_cmd, opts = {})
     script = "/tmp/#{name}"
     # this lets us abort a script if a command in the middle of it errors out
     contents = "#{stop_on_error_cmd}\n#{contents}" if stop_on_error_cmd
-    put(contents, script)
+    put(contents, script, opts)
     return script
   end
 
-  def run_script(name, contents)
-    script = prepare_script(name, contents)
-    run "sh #{script}"
+  def run_script(name, contents, opts = {})
+    args = opts.delete(:script_args)
+    script = prepare_script(name, contents, rubber_env.stop_on_error_cmd, opts)
+    run "bash #{script} #{args}", opts
   end
 
-  def sudo_script(name, contents)
-    script = prepare_script(name, contents)
-    sudo "sh #{script}"
+  def sudo_script(name, contents, opts = {})
+    user = opts.delete(:as)
+    args = opts.delete(:script_args)
+    script = prepare_script(name, contents, rubber_env.stop_on_error_cmd, opts)
+
+    sudo_args = user ? "-H -u #{user}" : ""
+    run "#{sudo} #{sudo_args} bash -l #{script} #{args}", opts
+  end
+
+  def top.rsudo(command, opts = {}, &block)
+    user = opts.delete(:as)
+    args = "-H -u #{user}" if user
+    run "#{sudo opts} #{args} bash -l -c '#{command}'", opts, &block
   end
 
   def get_env(name, desc, required=false, default=nil)
@@ -173,7 +193,9 @@ namespace :rubber do
     value = Capistrano::CLI.ui.ask(msg) unless value
     value = value.size == 0 ? default : value
     fatal "#{name} is required, pass using environment or enter at prompt" if required && ! value
-    return value
+
+    # Explicitly convert to a String to avoid weird serialization issues with Psych.
+    value.to_s
   end
 
   def fatal(msg, code=1)
@@ -200,4 +222,17 @@ namespace :rubber do
     return opts
   end
 
+  # some bootstraps update code (bootstrap_db), so keep track so we don't do it multiple times  
+  after "deploy:update_code" do
+    set :rubber_code_was_updated, true
+  end
+  
+  def update_code_for_bootstrap
+    unless (fetch(:rubber_code_was_updated, false))
+      deploy.setup
+      logger.info "updating code for bootstrap"
+      deploy.update_code
+    end
+  end
+  
 end

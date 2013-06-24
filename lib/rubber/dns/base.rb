@@ -3,12 +3,10 @@ module Rubber
 
     class Base
 
-      attr_reader :env, :provider_env, :provider_name
+      attr_reader :env
 
-      def initialize(env, provider_name)
-        @env = env
-        @provider_name = provider_name
-        @provider_env = @env.dns_providers[provider_name]
+      def initialize(env)
+        @env = env   
       end
 
       def update(host, ip)
@@ -17,10 +15,10 @@ module Rubber
         else
           if find_host_records(:host => host).size == 0
             puts "Creating dynamic DNS: #{host} => #{ip}"
-            create_host_record(:host => host, :data => ip)
+            create_host_record(:host => host, :data => [ip])
           else
             puts "Updating dynamic DNS: #{host} => #{ip}"
-            update_host_record({:host => host}, {:host => host, :data => ip})
+            update_host_record({:host => host}, {:host => host, :data => [ip]})
           end
         end
       end
@@ -33,7 +31,7 @@ module Rubber
       end
 
       def up_to_date(host, ip)
-        find_host_records(:host => host).any? {|host| host[:data] == ip}
+        find_host_records(:host => host).any? {|host| host[:data].include?(ip) }
       end
 
       def create_host_record(opts = {})
@@ -60,14 +58,18 @@ module Rubber
       end
 
       def setup_opts(opts, required=[])
-        default_opts = {:domain => @env.domain,
-                        :type => @provider_env['type'] || @provider_env.record_type || 'A',
-                        :ttl => @provider_env.ttl || 300}
+        default_opts = {:domain => env.domain || Rubber.config.domain,
+                        :type => env['type'] || env.record_type || 'A',
+                        :ttl => env.ttl || 300}
         
         if opts.delete(:no_defaults)
           actual_opts = Rubber::Util::symbolize_keys(opts)
         else
           actual_opts = default_opts.merge(Rubber::Util::symbolize_keys(opts))
+        end
+
+        if actual_opts.has_key?(:data) && actual_opts[:data].is_a?(Array) && actual_opts[:data].first.is_a?(Hash)
+          actual_opts[:data] = actual_opts[:data].collect { |x| Rubber::Util.symbolize_keys(x) }
         end
 
         required.each do |r|
